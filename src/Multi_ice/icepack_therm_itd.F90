@@ -1009,6 +1009,7 @@
       delta_an   = c0
       rsiden     = c0
 
+      aicen_init  = aicen
       if (tr_fsd) then
          call icepack_cleanup_fsd (ncat, nfsd, trcrn(nt_fsd:nt_fsd+nfsd-1,:))
          if (icepack_warnings_aborted(subname)) return
@@ -1020,7 +1021,6 @@
          allocate(d_afsd_tmp(nfsd))
          allocate(f_flx(nfsd+1))
 
-         aicen_init  = aicen
          afsdn       = trcrn(nt_fsd:nt_fsd+nfsd-1,:)
          afsdn_init  = afsdn ! for diagnostics
          df_flx      = c0
@@ -1095,15 +1095,20 @@
          !if (tr_fsd) xtmp = (frzmltn(1)*(1-sum(aicen(:)))-min(c0,hocnn(1)))/(fside + puny)
          !xtmp = max(c0,min(xtmp, c1))
          !fside = fside * xtmp
-         if (tr_fsd) xtmp = (rside)/(sum(rsiden(:))+puny)
-         xtmp = max(c0,min(xtmp, c1))
-         fside = fside * xtmp
-         
+         if (tr_fsd) then
+            if (fside < -puny) then
+               xtmp = (c1-sum(aicen(:)))*min(c0,frzmltn(1))/fside
+               xtmp = max(c0,min(xtmp,c1))
+            else
+               xtmp = c0
+            endif
+         endif
+         fside = fside*xtmp
+         rsiden(:) = rsiden(:)*xtmp
+         G_radialn(:) = G_radialn(:)*xtmp         
 
          do n = 1, ncat
 
-         rsiden(n) = rsiden(n) * xtmp
-         G_radialn(n) = G_radialn(n) * xtmp
       !-----------------------------------------------------------------
       ! Melt the ice and increment fluxes.
       !-----------------------------------------------------------------
@@ -1209,7 +1214,9 @@
                dfhocn = trcrn(nt_qice+k-1,n)*rsiden(n) / dt &
                       * vicen(n)/real(nilyr,kind=dbl_kind)
                fhocn  = fhocn + dfhocn
-               hocnn(1) = hocnn(1) + dfhocn
+               if (c1-sum(aicen_init(:)*(c1-rsiden(:))) > puny) then
+                  hocnn(1) = hocnn(1) + dfhocn / (c1-sum(aicen_init(:)*(c1-rsiden(:))))
+               endif
             enddo                  ! nilyr
 
             do k = 1, nslyr
@@ -1217,7 +1224,9 @@
                dfhocn = trcrn(nt_qsno+k-1,n)*rsiden(n) / dt &
                       * vsnon(n)/real(nslyr,kind=dbl_kind)
                fhocn  = fhocn + dfhocn
-               hocnn(1) = hocnn(1) + dfhocn
+               if (c1-sum(aicen_init(:)*(c1-rsiden(:))) > puny) then
+                  hocnn(1) = hocnn(1) + dfhocn / (c1-sum(aicen_init(:)*(c1-rsiden(:))))
+               endif
             enddo                  ! nslyr
 
             if (tr_aero) then
@@ -2685,7 +2694,7 @@
 
       enddo ! ncats
 
-      hocnn(1) = hocnn(1) + min( max(frzmltn(1)*aice0, c0) , max(tmpfrz , c0))
+      hocnn(1) = hocnn(1) + min( max(frzmltn(1), c0) , max(tmpfrz,c0)/max(aice0+sum(d_an_tot(:)),puny))
 
       if (conserv_check) then
 

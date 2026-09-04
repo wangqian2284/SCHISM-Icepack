@@ -565,7 +565,7 @@
       real (kind=dbl_kind) :: &
          deltaT    , & ! SST - Tbot >= 0
          ustar     , & ! skin friction velocity for fbot (m/s)
-         xtmp,fsidetmp,rsidetmp,wlattmp    ! temporary variable
+         xtmp,wlattmp    ! temporary variable
 
       real (kind=dbl_kind), dimension(ncat) :: &
          etotn
@@ -659,28 +659,19 @@
          fside = rside*xtmp/dt
       endif
 
-      fsidetmp = c0
-      rsidetmp = c0
-      do n=1,ncat
-         fsidetmp = fsidetmp + aicen(n)*min(c0,frzmltn(n+1))
-         rsidetmp = rsidetmp + aicen(n)*fbotn(n)
-      enddo
       
-      xtmp = c0
-      if(frzmltn(1) < c0 .and. aice>puny) then   
-         xtmp = (fsidetmp+(1-aice)*min(c0,frzmltn(1)))/(rsidetmp + fside + puny)
-         xtmp = max(c0,min(xtmp, c1))
-      else
-         xtmp = (fsidetmp)/(rsidetmp + fside + puny)
-         xtmp = max(c0,min(xtmp, c1))
-         !equal to xtmp = c1
-      endif 
-         !if(xtmp<0) write(12,*) 't1,xtmp', xtmp,aicen(:),sstn(:),fbotn(:),frzmltn(:),rsidetmp,fsidetmp,fside
-         do n=1,ncat
-            fbotn(n)  = fbotn(n) * xtmp
-         enddo 
-         fside = fside * xtmp
-         rside = rside * xtmp
+      xtmp = c1
+      if (fside < -puny) then
+         if ((c1-aice) > puny .and. frzmltn(1) < -puny) then
+            xtmp = (c1-aice)*min(c0,frzmltn(1))/fside
+            xtmp = max(c0,min(xtmp,c1))
+         else
+            xtmp = c0
+         endif
+      endif
+
+      fside = fside*xtmp
+      rside = rside*xtmp
 
       if (present(wlat)) wlat=wlat_loc
 

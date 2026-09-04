@@ -99,6 +99,10 @@
 
                dptot = max(0.d0,dp(i)+eta2(i))
                depth0 = znl(:,i)
+               
+               hmix(i) = abs(depth0(nvrt)-depth0(nvrt - 1))
+               hmix(i) = min(dptot , hmix(i))
+
 
                if(aice(i)>puny ) then
                   tmp1 = vice(i)/aice(i) !hice
@@ -163,7 +167,7 @@
 
                !assume watertype is 6
                rr=0.62d0; d_1=1.50d0; d_2=20.d0
-               dp1=min(ze(nvrt,i)-ze(nvrt-1,i),500._rkind)
+               dp1=min(znl(nvrt,i)-znl(nvrt-1,i),500._rkind)
                srad1=sradiold(i)*(rr*exp(-dp1/d_1)+(1.d0-rr)*exp(-dp1/d_2))
                srad2=sradiold(i)
 
@@ -250,7 +254,7 @@
                      srad3=fswthrun_old(i,1)*(rr*exp(-dp1/d_1)+(1.d0-rr)*exp(-dp1/d_2))
                      srad4=fswthrun_old(i,1)
                      if(aice0(i)>puny) then
-                        sstn(i,1)=((1-beta)*sstn_old(i,1)+beta*sstiold(i))+(srad4-srad3+hocnn_old(i,1))*ice_dt/rho0/shw+sst(i)-sstiold(i)-(srad2-srad1+netheatiold(i))*ice_dt/rho0/shw
+                        sstn(i,1)=((1-beta)*sstn_old(i,1)+beta*sstiold(i))+(srad4-srad3+hocnn_old(i,1))*ice_dt/rho0/shw/hmix(i)+sst(i)-sstiold(i)-(srad2-srad1+netheatiold(i))*ice_dt/rho0/shw/hmix(i)
                      else
                         sstn(i,1)=sst(i)
                      endif
@@ -258,7 +262,7 @@
                         srad3=fswthrun_old(i,j+1)*(rr*exp(-dp1/d_1)+(1.d0-rr)*exp(-dp1/d_2))
                         srad4=fswthrun_old(i,j+1)
                         if(aicen(i,j)>puny) then
-                           sstn(i,j+1)=((1-beta)*sstn_old(i,j+1)+beta*sstiold(i))+(srad4-srad3+hocnn_old(i,j+1))*ice_dt/rho0/shw+sst(i)-sstiold(i)-(srad2-srad1+netheatiold(i))*ice_dt/rho0/shw
+                           sstn(i,j+1)=((1-beta)*sstn_old(i,j+1)+beta*sstiold(i))+(srad4-srad3+hocnn_old(i,j+1))*ice_dt/rho0/shw/hmix(i)+sst(i)-sstiold(i)-(srad2-srad1+netheatiold(i))*ice_dt/rho0/shw/hmix(i)
                         else
                            sstn(i,j+1)=sst(i)
                         endif
@@ -314,7 +318,7 @@
                      srad3=fswthrun_old(i,1)*(rr*exp(-dp1/d_1)+(1.d0-rr)*exp(-dp1/d_2))
                      srad4=fswthrun_old(i,1)
                      if(aice0(i)>puny) then
-                        sstn(i,1)=(1-beta)*(sstn_old(i,1)+(srad4-srad3+hocnn_old(i,1))*ice_dt/rho0/shw+sst(i)-sstiold(i)-(srad2-srad1+netheatiold(i))*ice_dt/rho0/shw)+beta*sst(i)
+                        sstn(i,1)=(1-beta)*(sstn_old(i,1)+(srad4-srad3+hocnn_old(i,1))*ice_dt/rho0/shw/hmix(i)+sst(i)-sstiold(i)-(srad2-srad1+netheatiold(i))*ice_dt/rho0/shw/hmix(i))+beta*sst(i)
                      else
                         sstn(i,1)=sst(i)
                      endif
@@ -322,7 +326,7 @@
                         srad3=fswthrun_old(i,j+1)*(rr*exp(-dp1/d_1)+(1.d0-rr)*exp(-dp1/d_2))
                         srad4=fswthrun_old(i,j+1)
                         if(aicen(i,j)>puny) then
-                           sstn(i,j+1)=(1-beta)*(sstn_old(i,j+1)+(srad4-srad3+hocnn_old(i,j+1))*ice_dt/rho0/shw+sst(i)-sstiold(i)-(srad2-srad1+netheatiold(i))*ice_dt/rho0/shw)+beta*sst(i)
+                           sstn(i,j+1)=(1-beta)*(sstn_old(i,j+1)+(srad4-srad3+hocnn_old(i,j+1))*ice_dt/rho0/shw/hmix(i)+sst(i)-sstiold(i)-(srad2-srad1+netheatiold(i))*ice_dt/rho0/shw/hmix(i))+beta*sst(i)
                         else
                            sstn(i,j+1)=sst(i)
                         endif
@@ -372,9 +376,6 @@
                   beta = -1
                endif
                               
-               hmix(i) = abs(depth0(nvrt)-depth0(nvrt - 1))
-               hmix(i) = min(dptot , hmix(i))
-
                !redistribute the SSTN, stay synchronized with SST, when SST < Tf, there is no melting, vice versa
 
                ! if(sst(i)>Tf(i)) then ! melt

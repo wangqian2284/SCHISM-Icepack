@@ -1017,7 +1017,9 @@
 
           use icepack_intfc,   only: icepack_init_fsd
           use icepack_intfc,   only: icepack_aggregate
-          use schism_glbl,     only : xnd, ynd
+          use schism_glbl,     only : xnd, ynd, lhas_ice
+          use mice_module,     only : idealized_case, idealized_floe_size, &
+                                      idealized_aice, idealized_hice
 
           implicit none
 
@@ -1050,7 +1052,7 @@
           integer (kind=int_kind) :: nt_fbri, nt_alvl, nt_vlvl, ntrcr, nt_rsnw, &
                                      nt_smice, nt_smliq, nt_rhos
     
-          character(len=char_len_long), parameter  :: ice_ic='default'
+          character(len=char_len_long) :: ice_ic
           character(len=*),             parameter  :: subname='(set_state_var)'
     
           !-----------------------------------------------------------------
@@ -1070,6 +1072,15 @@
           call icepack_warnings_flush(ice_stderr)
           if (icepack_warnings_aborted()) call icedrv_system_abort(string=subname,     &
              file=__FILE__,line= __LINE__)
+
+          ice_ic = 'default'
+          if (idealized_case > 0) then
+             if (.not. tr_fsd .or. nfsd < 16) then
+                call icedrv_system_abort(string='idealized case requires tr_fsd=.true. and nfsdcat>=16', &
+                   file=__FILE__,line=__LINE__)
+             endif
+             ice_ic = 'idealized_'//trim(idealized_floe_size)
+          endif
     
           !-----------------------------------------------------------------
           ! Initialize state variables.
@@ -1121,7 +1132,14 @@
              hinit(n) = c0
           enddo
 
-          if (3 <= ncat) then
+          if (idealized_case > 0) then
+            n = 1
+            do while (n < ncat .and. idealized_hice > hin_max(n))
+               n = n + 1
+            enddo
+            ainit(n) = idealized_aice
+            hinit(n) = idealized_hice
+          elseif (3 <= ncat) then
             n = 3
             ainit(n) = c1  ! assumes we are using the default ITD boundaries
             hinit(n) = c2
@@ -1145,7 +1163,7 @@
          !   hinit(5) = 5.d0
           do i = 1, nx
             do n = 1, ncat
-               if((lat_val(i)*180/pi)>91) then
+               if(idealized_case > 0 .or. (lat_val(i)*180/pi)>91) then
                !if (sst(i) <= -1 .and. (lat_val(i)*180/pi)>80 .and. (lat_val(i)*180/pi)<85 .and. (lon_val(i)*180/pi)>140 .and. (lon_val(i)*180/pi)<150) then
                !if (xnd(i) <= -65000 .and. xnd(i) >= -70000 .and. ynd(i) >= 500 .and. ynd(i) <= 5500) then
                !if (xnd(i) <= -55000 .and. xnd(i) >= -58000 .and. ynd(i) >= 4000 .and. ynd(i) <= 7000) then
@@ -1269,6 +1287,7 @@
                                     nt_strata=nt_strata    (1:ntrcr,:))
     
              aice_init(i) = aice(i)
+             if (idealized_case > 0) lhas_ice(i) = aice(i) > puny
     
           enddo
     

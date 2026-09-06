@@ -49,6 +49,9 @@ MODULE mice_module
   real(rkind) :: ice_cutoff,theta_io,cos_io,sin_io,mevp_alpha1,mevp_alpha2, &
   &h_ml0,salt_ice,salt_water
   integer :: ice_tests,ice_advection,ice_therm_on,ievp,mevp_rheol_steps,niter_fct
+  integer :: idealized_case, sstntest
+  real(rkind) :: idealized_aice, idealized_hice, sstn_beta_fixed
+  character(len=16) :: idealized_floe_size
 
 NAMELIST /ice_dyn/ whichEVP, Pstar, delta_min, evp_rheol_steps, Cd_oce_ice, &
 ice_gamma_fct, ice_diff, theta_io,ice_ave_steps, c_pressure

@@ -1,6 +1,16 @@
+&idealized_nml
+    ! Cases 1 and 2 require nfsdcat=16 and tr_fsd=.true. below.
+    idealized_case       = 0        ! 0: realistic, 1: melt, 2: freeze
+    idealized_floe_size  = 'medium' ! small: 500 m, medium: 1.5 km, large: 3 km radius
+    idealized_aice       = 0.5
+    idealized_hice       = 1.0
+    sstntest             = 2        ! 0: node average, 1: fixed beta, 2: dynamic beta(R_f)
+    sstn_beta_fixed      = 1.0      ! used only when sstntest=1
+/
+
 &env_nml                    ! In the original release these variables are defined in the icepack.settings
     nicecat   = 5           ! number of ice thickness categories
-    nfsdcat   = 1           ! number of floe size categories
+    nfsdcat   = 1           ! set to 16 for idealized cases
     nicelyr   = 7           ! number of vertical layers in the ice
     nsnwlyr   = 4           ! number of vertical layers in the snow
     ntraero   = 0           ! number of aerosol tracers (up to max_aero in ice_domain_size.F90)
@@ -35,7 +45,7 @@
     tr_pond_topo = .false.
     tr_pond_lvl  = .false.
     tr_aero      = .false.
-    tr_fsd       = .false.
+    tr_fsd       = .false.  ! set to .true. for idealized cases
 /
 
 &thermo_nml

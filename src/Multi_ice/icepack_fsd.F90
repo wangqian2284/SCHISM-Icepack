@@ -281,16 +281,36 @@
 
       ! local variables
 
-      real (kind=dbl_kind) :: alpha, totfrac
+      real (kind=dbl_kind) :: alpha, totfrac, target_radius
 
-      integer (kind=int_kind) :: k
+      integer (kind=int_kind) :: k, target_bin
 
       real  (kind=dbl_kind), dimension (nfsd) :: &
          num_fsd           ! number distribution of floes
 
+      character(len=*), parameter :: subname='(icepack_init_fsd)'
+
       if (trim(ice_ic) == 'none') then
 
          afsd(:) = c0
+
+      elseif (index(trim(ice_ic), 'idealized_') == 1) then
+
+         select case (trim(ice_ic))
+         case ('idealized_small')
+            target_radius = 500._dbl_kind
+         case ('idealized_medium')
+            target_radius = 1500._dbl_kind
+         case ('idealized_large')
+            target_radius = 3000._dbl_kind
+         case default
+            call icepack_warnings_add(subname//' unknown idealized floe size')
+            call icepack_warnings_setabort(.true.,__FILE__,__LINE__)
+            return
+         end select
+         target_bin = minloc(abs(floe_rad_c-target_radius), dim=1)
+         afsd(:) = c0
+         afsd(target_bin) = c1
 
       else            ! Perovich (2014)
 
@@ -306,9 +326,6 @@
          afsd = afsd/totfrac                    ! normalize
 
       endif ! ice_ic
-
-      afsd(:) = c0
-      afsd(16) = c1
 
       end subroutine icepack_init_fsd
 
@@ -1081,4 +1098,3 @@
       end module icepack_fsd
 
 !=======================================================================
-

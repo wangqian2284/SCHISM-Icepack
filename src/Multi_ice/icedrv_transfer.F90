@@ -13,7 +13,7 @@
       module subroutine schism_to_icepack
           use schism_glbl,only: rkind,npa,tr_nd,iplg,pr,fluxprc,rho0,shw,windx,windy,wave_spec, &
           &nvrt,srad_o,albedo,hradd,airt1,shum1,errmsg,fresh_wa_flux,net_heat_flux, &
-          uu2,vv2,area,elnode,i34,dt,nstep_ice,prec_rain,prec_snow,it_main,lhas_ice,drampwind, &
+          uu2,vv2,area,elnode,i34,dt,nstep_ice,prec_rain,prec_snow,it_main,lhas_ice,drampwind,tau, &
           nws,idry,isbnd,dp,nnp,znl,eta2,kbp,prho,xlon,ylat
           use schism_msgp, only: myrank,nproc,parallel_abort,parallel_finalize,exchange_p2d
           use mice_module
@@ -65,7 +65,7 @@
              threshold_hw = 30            ! max water depth for grounding
 
           integer(kind=dbl_kind)   :: i, n,  k,  elem, j, kbp1, indx
-          integer (kind=int_kind)  :: nt_Tsfc, ssttest,nt_fsd
+          integer (kind=int_kind)  :: nt_Tsfc, nt_fsd
           real   (kind=int_kind)   :: tx, ty, tmp3, tmp4, tvol,utmp(3),vtmp(3),&
           &eps11,eps12,eps22,delta_ice0
 
@@ -83,16 +83,15 @@
          call icepack_query_parameters(calc_strair_out=calc_strair, cprho_out=cprho,puny_out=puny,floeshape_out=floeshape)
          call icepack_warnings_flush(ice_stderr)
          
-          ssttest = 2
           sstthreshold=5
           sstnbeta = 0.d0
           sstnfsd_rad = 0.d0
           nfloe = 0.d0
           floenum = 0.d0
-          !if(month_mice > 5 .and. month_mice < 9) ssttest = 2
           kappae = 54.d0
           ! Ice 
           do i=1,npa
+               beta = c0
            
                uvel(i)  = u_ice(i)
                vvel(i)  = v_ice(i)
@@ -123,6 +122,14 @@
                vocn(i)   = vv2(nvrt,i)
                u_ocean(i)= uu2(nvrt,i)
                v_ocean(i)= vv2(nvrt,i)
+               if (idealized_case > 0) then
+                  uvel(i) = c0
+                  vvel(i) = c0
+                  uocn(i) = c0
+                  vocn(i) = c0
+                  u_ocean(i) = c0
+                  v_ocean(i) = c0
+               endif
                wave_spectrum(i,:)=wave_spec(i,:)
                !if(aice(i)>0.4) wave_spectrum(i,:) = 0.d0
                !write(12,*) 'wave spectrum',i,xlon(i)*180/3.1415926,ylat(i)*180/3.1415926,wave_spectrum(i,:)
@@ -171,7 +178,9 @@
                srad1=sradiold(i)*(rr*exp(-dp1/d_1)+(1.d0-rr)*exp(-dp1/d_2))
                srad2=sradiold(i)
 
-               if(ssttest==1) then
+#if 0
+               ! Legacy test scheme 1. Retained for reference only.
+               if(sstntest==1) then
                   tmp4 = 0 ! mean radii of floe
                   if (tr_fsd) then
                      do j=1,ncat
@@ -212,7 +221,9 @@
                         sstn(i,j+1)=sst(i)
                      enddo
                   endif
-               elseif ( ssttest==2 ) then
+#endif
+               ! Fixed and dynamic schemes share this update; only beta differs.
+               if (sstntest==1 .or. sstntest==2) then
 
                  beta = 0 !0.1*aice0(i)
                  tmp4 = 0 ! mean radii of floe
@@ -247,6 +258,8 @@
                   else
                      beta=0.01
                   endif
+
+                  if (sstntest == 1) beta = sstn_beta_fixed
                   
                   if(lhas_ice(i)) then
                      beta = beta
@@ -277,7 +290,9 @@
                         sstn(i,j+1)=sst(i)
                      enddo
                   endif
-               elseif ( ssttest==3 ) then
+#if 0
+               ! Legacy test scheme 3. Retained for reference only.
+               elseif ( sstntest==3 ) then
                  beta = 0 !0.1*aice0(i)
                  tmp4 = 0 ! mean radii of floe
                  tmp3 = 0
@@ -341,7 +356,8 @@
                         sstn(i,j+1)=sst(i)
                      enddo
                   endif
-               elseif(ssttest==0) then
+#endif
+               elseif(sstntest==0) then
                   tmp4 = 0 ! mean radii of floe
                   if (tr_fsd) then
                      do j=1,ncat
@@ -469,18 +485,56 @@
 
                !if(idry(i)==1) hmix(i) = 0
 
-               T_air(i)  = airt1(i) + 273.15_dbl_kind
-               Qa(i)     = shum1(i)
+               T_air(i) = airt1(i) + 273.15_dbl_kind
+               Qa(i)    = shum1(i)
+               fsw(i)   = srad_o(i)/max(c1-albedo(i),puny)
+               flw(i)   = hradd(i)
+               frain(i) = prec_rain(i)
+               fsnow(i) = prec_snow(i)
+               wind(i)  = sqrt(uatm(i)**2 + vatm(i)**2)
 
-               fsw(i)    = srad_o(i)/(1-albedo(i))
-               flw(i)    = hradd(i)
-               
-               frain(i)  = prec_rain(i) !* 1000.0_dbl_kind
-               fsnow(i)  = prec_snow(i) !* 1000.0_dbl_kind
-
-     
-               !wind(i)   = sqrt(windx(i)**2 + windy(i)**2)
-                wind(i)   = sqrt(uatm(i)**2 + vatm(i)**2)
+               if (idealized_case == 1) then
+                  ! Shortwave-only melt experiment, initially balanced at 0 C.
+                  pr(i) = 101325._dbl_kind
+                  windx(i) = c0
+                  windy(i) = c0
+                  tau(:,i) = c0
+                  airt1(i) = c0
+                  shum1(i) = 0.003756_dbl_kind
+                  hradd(i) = 315.6369791823_dbl_kind
+                  prec_rain(i) = c0
+                  prec_snow(i) = c0
+                  uatm(i) = c0
+                  vatm(i) = c0
+                  wind(i) = c0
+                  T_air(i) = airt1(i) + 273.15_dbl_kind
+                  Qa(i) = shum1(i)
+                  fsw(i) = 100._dbl_kind
+                  flw(i) = hradd(i)
+                  frain(i) = prec_rain(i)
+                  fsnow(i) = prec_snow(i)
+                  srad_o(i) = fsw(i)*(c1-albedo(i))
+               elseif (idealized_case == 2) then
+                  pr(i) = 101325._dbl_kind
+                  windx(i) = c0
+                  windy(i) = c0
+                  tau(:,i) = c0
+                  airt1(i) = -10._dbl_kind
+                  shum1(i) = 0.0015_dbl_kind
+                  hradd(i) = 271._dbl_kind
+                  prec_rain(i) = c0
+                  prec_snow(i) = c0
+                  uatm(i) = c0
+                  vatm(i) = c0
+                  wind(i) = c0
+                  T_air(i) = airt1(i) + 273.15_dbl_kind
+                  Qa(i) = shum1(i)
+                  fsw(i) = c0
+                  flw(i) = hradd(i)
+                  frain(i) = prec_rain(i)
+                  fsnow(i) = prec_snow(i)
+                  srad_o(i) = c0
+               endif
      
                !if ( l_mslp ) then
                   !potT(:) = T_air(:)*(press_air(:)/100000.0_dbl_kind)**ex             

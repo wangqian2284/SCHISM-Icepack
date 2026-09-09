@@ -435,6 +435,8 @@
           melts  (:) = c0
           meltb  (:) = c0
           meltl  (:) = c0
+          meltbn (:,:) = c0
+          meltln (:,:) = c0
           daidtt (:) = aice(:) ! temporary initial area
           dvidtt (:) = vice(:) ! temporary initial volume
           if (tr_iage) then

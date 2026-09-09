@@ -170,6 +170,8 @@ io_list_icepack =  !'aicen     ' ! Sea ice concentration
                     'sice      ' ! Sea ice salinity
                     'qsno      ' ! Snow enthalpy
                    ! Other variables
+                    'meltb     ' ! Bottom melt by category (m per category ice area/step)
+                    'meltl     ' ! Lateral melt by category (m per grid area/step)
                    !'uvel      ' ! x-component of sea ice velocity
                    !'vvel      ' ! y-component of sea ice velocity                   
 		   'rdg_conv  '

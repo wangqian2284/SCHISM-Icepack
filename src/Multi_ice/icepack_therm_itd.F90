@@ -891,10 +891,13 @@
                                flux_bio,               &
                                nbtrcr,     nblyr,      &
                                nfsd,       d_afsd_latm,&
-                               floe_rad_c, floe_binwidth)
+                               floe_rad_c, floe_binwidth, meltln)
 
       real (kind=dbl_kind), intent(in) :: &
          dt        ! time step (s)
+
+      ! Actual category contribution to lateral ice volume loss (m/grid area).
+      real (kind=dbl_kind), dimension(:), intent(out), optional :: meltln
 
       integer (kind=int_kind), intent(in) :: &
          ncat    , & ! number of thickness categories
@@ -995,6 +998,7 @@
 
       character(len=*), parameter :: subname='(lateral_melt)'
 
+      if (present(meltln)) meltln(:) = c0
       flag = .false.
       dfhocn   = c0
       dfpond   = c0
@@ -1135,6 +1139,7 @@
             endif
 
             ! history diagnostics
+            if (present(meltln)) meltln(n) = vicen(n)*rsiden(n)
             meltl = meltl + vicen(n)*rsiden(n)
 
             ! state variables
@@ -2787,7 +2792,10 @@
                                      dwavefreq,                   &
                                      d_afsd_latg,  d_afsd_newi,   &
                                      d_afsd_latm,  d_afsd_weld,   &
-                                     floe_rad_c,   floe_binwidth)
+                                     floe_rad_c,   floe_binwidth, meltln)
+
+      ! Actual category contribution to lateral ice volume loss (m/grid area).
+      real (kind=dbl_kind), dimension(:), intent(out), optional :: meltln
 
       integer (kind=int_kind), intent(in) :: &
          ncat     , & ! number of thickness categories
@@ -2921,6 +2929,8 @@
       !-----------------------------------------------------------------
       ! Check optional arguments and set local values
       !-----------------------------------------------------------------
+
+       if (present(meltln)) meltln(:) = c0
 
        if (icepack_chkoptargflag(first_call)) then
           if (tr_iso) then
@@ -3091,7 +3101,7 @@
                          flux_bio,                 &
                          nbtrcr,    nblyr,         &
                          nfsd,      d_afsd_latm,   &
-                         floe_rad_c,floe_binwidth)
+                         floe_rad_c,floe_binwidth,meltln=meltln)
       if (icepack_warnings_aborted(subname)) return
 
       ! Floe welding during freezing conditions

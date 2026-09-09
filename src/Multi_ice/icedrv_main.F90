@@ -293,6 +293,7 @@
              meltsn(:,:)      , & ! snow melt in category n (m)
              melttn(:,:)      , & ! top melt in category n (m)
              meltbn(:,:)      , & ! bottom melt in category n (m)
+             meltln(:,:)      , & ! lateral volume loss by category per grid area (m)
              congeln(:,:)     , & ! congelation ice formation in category n (m)
              snoicen(:,:)         ! snow-ice formation in category n (m)
     

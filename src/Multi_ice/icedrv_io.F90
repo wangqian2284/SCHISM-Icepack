@@ -33,7 +33,7 @@
           integer, intent(inout)       :: noutput
           !type(t_mesh), target, intent(in) :: mesh
 
-          integer           :: i, j, k,                            &
+          integer           :: i, j, k, ice_output_base,           &
                                nt_Tsfc, nt_sice, nt_qice, nt_qsno, &
                                nt_apnd, nt_hpnd, nt_ipnd, nt_alvl, &
                                nt_vlvl, nt_iage, nt_FY,   nt_aero, &
@@ -83,6 +83,9 @@
 
         
           noutput=noutput+5
+          ! Keep new diagnostic IDs independent of the legacy ridging cases,
+          ! which increment noutput inside the stream loop.
+          ice_output_base=noutput
           do i=1, io_listsize
              !write(*,*) trim(io_list_icepack(i)%id)
              select case (trim(io_list_icepack(i)%id))
@@ -304,6 +307,22 @@
                     call writeout_nc(id_out_var(noutput+198+k), trim(longname),1,1,npa, trcr(:,nt_qsno+k-1))
                     !call def_stream2D(nod2D,  nx_nh, trim(trname), trim(longname), trim(units), trcr(:,nt_qsno+k-1), io_list_icepack(i)%freq, io_list_icepack(i)%unit, io_list_icepack(i)%precision, mesh)
                  end do
+             case ('meltb     ')
+                  ! Actual bottom thickness melted in each category (m/ice_dt).
+                  ! Each value is per category ice area, not per grid area.
+                  do k = 1,ncat
+                     write(longname,'(A,I0)') 'sea_ice_bottom_melt_step_cat_', k
+                     call writeout_nc(id_out_var(ice_output_base+300+k), &
+                          trim(longname),1,1,npa,dble(meltbn(:,k)))
+                  enddo
+             case ('meltl     ')
+                  ! Actual lateral volume loss from each category (m/ice_dt),
+                  ! per grid area, sampled after the lateral heat limit.
+                  do k = 1,ncat
+                     write(longname,'(A,I0)') 'sea_ice_lateral_melt_step_cat_', k
+                     call writeout_nc(id_out_var(ice_output_base+300+ncat+k), &
+                          trim(longname),1,1,npa,dble(meltln(:,k)))
+                  enddo
              case ('rdg_conv  ')
                   call writeout_nc(id_out_var(noutput+180), 'Convergence term for ridging',1,1,npa, rdg_conv(:))
                   noutput=noutput+1
@@ -316,7 +335,7 @@
                  if (myrank==0) write(*,*) 'stream ', io_list_icepack(i)%id, ' is not defined !'
              end select
           end do
-          noutput=noutput+300
+          noutput=noutput+300+2*ncat
       end subroutine io_icepack
 
     !

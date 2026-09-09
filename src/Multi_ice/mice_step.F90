@@ -403,6 +403,7 @@ subroutine step_therm2 (dt)
                     Tf=Tf(i), sss=sss(i),                        &
                     salinz=salinz(i,:), fside=fside(i),          &
                     rside=rside(i),   meltl=meltl(i),            &
+                    meltln=meltln(i,:),                          &
                     wlat = wlat(i),                              &
                     frzmlt=frzmlt(i), frazil=frazil(i),          &
                     frzmltn=frzmltn(i,:),                        &

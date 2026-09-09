@@ -210,6 +210,7 @@
          meltsn(nx,ncat) , & ! snow melt in category n (m)
          melttn(nx,ncat) , & ! top melt in category n (m)
          meltbn(nx,ncat) , & ! bottom melt in category n (m)
+         meltln(nx,ncat) , & ! lateral volume loss by category per grid area (m)
          congeln(nx,ncat), & ! congelation ice formation in category n (m)
          snoicen(nx,ncat), & ! snow-ice formation in category n (m)
          keffn_top(nx,ncat), & ! effective thermal conductivity of the top ice layer

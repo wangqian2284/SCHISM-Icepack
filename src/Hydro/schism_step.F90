@@ -86,7 +86,7 @@
       use gen_modules_clock
       use icedrv_main, only:io_icepack,restart_icepack,step_icepack
       use mice_module, only: ntr_ice,u_ice,v_ice,ice_tr,delta_ice,sigma11, &
-   &sigma12,sigma22,sradiold,netheatiold,sstiold
+   &sigma12,sigma22,sradiold,netheatiold,sstiold,idealized_case
       use mice_therm_mod, only: t_oi,rhoice,rhosno
       use icepack_intfc,    only: icepack_sea_freezing_temperature
 #endif
@@ -977,7 +977,7 @@
       sradiold=0.d0
       netheatiold=0.d0
       do i=1,npa
-        if(lhas_ice(i)) then
+        if(lhas_ice(i).or.idealized_case>0) then
           tau(1,i)=((1-ice_tr(2,i))*tau(1,i)+tau_oi(1,i))*rampwind !m^2/s/s
           tau(2,i)=((1-ice_tr(2,i))*tau(2,i)+tau_oi(2,i))*rampwind !m^2/s/s
           !tau(1,i)=tau_oi(1,i)*rampwind !m^2/s/s
@@ -985,7 +985,11 @@
 
           maxpice=(rhoice*ice_tr(1,i)+ice_tr(3,i)*rhosno)*grav
           maxpice=min(maxpice,5.d0*rho0*grav)
-          pr(i)=pr1(i)+wtratio*(pr2(i)-pr1(i))+maxpice
+          if(idealized_case>0) then
+            pr(i)=101325.d0+maxpice
+          else
+            pr(i)=pr1(i)+wtratio*(pr2(i)-pr1(i))+maxpice
+          endif
           
           srad(i)=srad_o(i)*(1-ice_tr(2,i))+srad_th_ice(i)
           !Update fluxes
@@ -996,6 +1000,13 @@
             fluxevp(i)=0
 !          endif   
 #endif
+          ! Prescribed idealized forcing also takes precedence in builds
+          ! that otherwise read an imposed net atmospheric flux.
+          if(idealized_case>0) then
+            fluxprc(i)=fresh_wa_flux(i)*rampwind
+            sflux(i)=net_heat_flux(i)*rampwind
+            fluxevp(i)=0.d0
+          endif
           sradiold(i)=srad(i)
           netheatiold(i)=sflux(i) 
           tmp=abs(tau_oi(1,i))+abs(tau_oi(2,i))
@@ -7299,7 +7310,11 @@
 !$OMP   end workshare
 
 !       Salt exchange
-        if(isconsv/=0) then
+        if(isconsv/=0 &
+#ifdef USE_MICE
+           .or.idealized_case>0 &
+#endif
+          ) then
 !$OMP     do 
           do i=1,nea
             if(idry_e(i)==1) cycle
@@ -7325,7 +7340,11 @@
         endif !isconsv/=0
 
 !       Heat exchange
-        if(ihconsv/=0) then
+        if(ihconsv/=0 &
+#ifdef USE_MICE
+           .or.idealized_case>0 &
+#endif
+          ) then
 !$OMP     do 
           do i=1,nea
             if(idry_e(i)==1) cycle

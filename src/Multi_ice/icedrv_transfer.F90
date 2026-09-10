@@ -130,7 +130,11 @@
                   u_ocean(i) = c0
                   v_ocean(i) = c0
                endif
-               wave_spectrum(i,:)=wave_spec(i,:)
+               if(idealized_case>0) then
+                  wave_spectrum(i,:)=c0
+               else
+                  wave_spectrum(i,:)=wave_spec(i,:)
+               endif
                !if(aice(i)>0.4) wave_spectrum(i,:) = 0.d0
                !write(12,*) 'wave spectrum',i,xlon(i)*180/3.1415926,ylat(i)*180/3.1415926,wave_spectrum(i,:)
                !sss(i)    = tr_nd(2,indx,i)
@@ -485,14 +489,6 @@
 
                !if(idry(i)==1) hmix(i) = 0
 
-               T_air(i) = airt1(i) + 273.15_dbl_kind
-               Qa(i)    = shum1(i)
-               fsw(i)   = srad_o(i)/max(c1-albedo(i),puny)
-               flw(i)   = hradd(i)
-               frain(i) = prec_rain(i)
-               fsnow(i) = prec_snow(i)
-               wind(i)  = sqrt(uatm(i)**2 + vatm(i)**2)
-
                if (idealized_case == 1) then
                   ! Shortwave-only melt experiment, initially balanced at 0 C.
                   pr(i) = 101325._dbl_kind
@@ -534,6 +530,14 @@
                   frain(i) = prec_rain(i)
                   fsnow(i) = prec_snow(i)
                   srad_o(i) = c0
+               else
+                  T_air(i) = airt1(i) + 273.15_dbl_kind
+                  Qa(i)    = shum1(i)
+                  fsw(i)   = srad_o(i)/max(c1-albedo(i),puny)
+                  flw(i)   = hradd(i)
+                  frain(i) = prec_rain(i)
+                  fsnow(i) = prec_snow(i)
+                  wind(i)  = sqrt(uatm(i)**2 + vatm(i)**2)
                endif
      
                !if ( l_mslp ) then

@@ -1477,7 +1477,7 @@ module subroutine step_icepack()
     !-----------------------------------------------------------------
     if(mod(it_main-1,nstep_ice)==0) then
       if(ice_therm_on==1) then
-         if(ice_tests==0.and.(nws/=2.or.ihconsv/=1.or.isconsv/=1)) &
+         if(idealized_case==0.and.ice_tests==0.and.(nws/=2.or.ihconsv/=1.or.isconsv/=1)) &
       &call parallel_abort('ice_step: ice therm needs nws=2 etc')
          !Atmos variables are read in for thermodynamics
          if(ice_tests==0) then

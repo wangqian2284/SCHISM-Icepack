@@ -3,6 +3,8 @@
     idealized_case       = 0        ! 0: realistic, 1: melt, 2: freeze
     ! Idealized MICE can omit hgrid.ll; absent lon/lat use param.nml slam0/sfea0.
     ! Other enabled modules/forcing options may still require hgrid.ll.
+    ! Prescribed cases support nws=0, ihconsv=0, isconsv=0; ocean exchange stays active.
+    ! With ihconsv=0, ocean albedo=0.06 and water type=1 (see docs/idealized-case-runtime.md).
     idealized_floe_size  = 'medium' ! small: 500 m, medium: 1.5 km, large: 3 km radius
     idealized_aice       = 0.5
     idealized_hice       = 1.0

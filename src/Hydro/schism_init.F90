@@ -739,6 +739,9 @@
       endif !nws
 
 !     Heat and salt conservation flags
+#ifdef USE_MICE
+      call read_idealized_ice_config
+#endif
       if(ihconsv<0.or.ihconsv>1.or.isconsv<0.or.isconsv>1) then
         write(errmsg,*)'Unknown ihconsv or isconsv',ihconsv,isconsv
         call parallel_abort(errmsg)
@@ -3279,6 +3282,16 @@
 !      endif !nws=4
 
 !     Heat and salt conservation flags
+#ifdef USE_MICE
+      ! With prescribed idealized forcing, no external optical grids are read
+      ! when the atmospheric heat-exchange option is disabled.
+      if(idealized_case>0.and.ihconsv==0) then
+        albedo(:)=0.06_rkind
+        iwater_type(:)=1
+        if(myrank==0) write(16,*) &
+          'Idealized MICE: ocean albedo=0.06, water type=1; applying ice heat/salt fluxes'
+      endif
+#endif
       if(ihconsv/=0) then
         if(myrank==0) then
           write(16,*)'Warning: you have chosen a heat conservation model'
@@ -5174,7 +5187,6 @@
 
 #ifdef USE_MICE
       if(lhas_quad) call parallel_abort('init: no quads for mice')
-      call read_idealized_ice_config
       if(.not.lreadll) then
         if(idealized_case==0) call parallel_abort('init: mice needs hgrid.ll')
         ! Cartesian idealized columns use the configured reference location.

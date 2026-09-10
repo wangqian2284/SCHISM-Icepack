@@ -16,9 +16,6 @@ subroutine ice_init
     namelist /mice_in/ice_tests,ihot_mice,ice_advection,ice_therm_on,ievp,ice_cutoff,evp_rheol_steps,mevp_rheol_steps, &
    &delta_min,theta_io,mevp_alpha1,mevp_alpha2,pstar,ellipse,c_pressure,niter_fct, &
    &ice_gamma_fct,h_ml0,salt_ice,salt_water
-    namelist /idealized_nml/ idealized_case, idealized_floe_size, &
-   &idealized_aice, idealized_hice, sstntest, sstn_beta_fixed
-    
     !Init parameters
     !integers
     ice_tests=-1e6;ihot_mice=-1e6; ice_advection=-1e6; ice_therm_on=-1e6; ievp=-1e6; evp_rheol_steps=-1e6;
@@ -28,13 +25,6 @@ subroutine ice_init
     mevp_alpha1=-huge(1.d0); mevp_alpha2=-huge(1.d0); pstar=-huge(1.d0);
     ellipse=-huge(1.d0); c_pressure=-huge(1.d0); ice_gamma_fct=-huge(1.d0);
     h_ml0=-huge(1.d0); salt_ice=-huge(1.d0); salt_water=-huge(1.d0)
-    idealized_case=0
-    idealized_floe_size='medium'
-    idealized_aice=0.5_rkind
-    idealized_hice=1.0_rkind
-    sstntest=2
-    sstn_beta_fixed=1.0_rkind
-  
     open(10,file=in_dir(1:len_in_dir)//'mice.nml',status='old')
     read(10,nml=mice_in)
     close(10)
@@ -271,24 +261,6 @@ subroutine ice_init
       call parallel_abort(errmsg)
     endif 
   end if
-  read(nm_icepack_unit, nml=idealized_nml, iostat=iost)
-  rewind(nm_icepack_unit)
-  if(iost>0) call parallel_abort('ice_init: malformed idealized_nml')
-  if(idealized_case<0.or.idealized_case>2) &
-    call parallel_abort('ice_init: idealized_case must be 0, 1, or 2')
-  if(sstntest<0.or.sstntest>2) &
-    call parallel_abort('ice_init: sstntest must be 0, 1, or 2')
-  if(sstn_beta_fixed<0._rkind.or.sstn_beta_fixed>1._rkind) &
-    call parallel_abort('ice_init: sstn_beta_fixed must be between 0 and 1')
-  if(idealized_aice<0._rkind.or.idealized_aice>1._rkind) &
-    call parallel_abort('ice_init: idealized_aice must be between 0 and 1')
-  if(idealized_hice<=0._rkind) &
-    call parallel_abort('ice_init: idealized_hice must be positive')
-  if(idealized_case>0.and.nstep_ice/=1) &
-    call parallel_abort('ice_init: idealized cases currently require nstep_ice=1')
-  if(trim(idealized_floe_size)/='small'.and.trim(idealized_floe_size)/='medium'.and. &
-    trim(idealized_floe_size)/='large') &
-    call parallel_abort('ice_init: idealized_floe_size must be small, medium, or large')
   if(myrank==0) then
     write(16,*) 'Sub-grid SST scheme=',sstntest,' fixed beta=',sstn_beta_fixed
     if(idealized_case>0) then
@@ -321,3 +293,45 @@ subroutine ice_init
   if(myrank==0) write(16,*)'done icepack initial'
 
 end subroutine ice_init
+
+! Read before the MICE geographic-coordinate check in schism_init.
+! Keep the default (no idealized_nml) behavior as a realistic case.
+subroutine read_idealized_ice_config
+  use schism_glbl, only: rkind, nstep_ice
+  use schism_msgp, only: parallel_abort
+  use mice_module, only: idealized_case, idealized_floe_size, &
+    idealized_aice, idealized_hice, sstntest, sstn_beta_fixed
+  implicit none
+  integer :: config_unit, config_status
+    namelist /idealized_nml/ idealized_case, idealized_floe_size, &
+   &idealized_aice, idealized_hice, sstntest, sstn_beta_fixed
+
+    idealized_case=0
+    idealized_floe_size='medium'
+    idealized_aice=0.5_rkind
+    idealized_hice=1.0_rkind
+    sstntest=2
+    sstn_beta_fixed=1.0_rkind
+
+  open(newunit=config_unit, file='namelist.icepack', status='old', &
+       action='read', iostat=config_status)
+  if(config_status/=0) call parallel_abort('ice_init: cannot open namelist.icepack')
+  read(config_unit, nml=idealized_nml, iostat=config_status)
+  close(config_unit)
+  if(config_status>0) call parallel_abort('ice_init: malformed idealized_nml')
+  if(idealized_case<0.or.idealized_case>2) &
+    call parallel_abort('ice_init: idealized_case must be 0, 1, or 2')
+  if(sstntest<0.or.sstntest>2) &
+    call parallel_abort('ice_init: sstntest must be 0, 1, or 2')
+  if(sstn_beta_fixed<0._rkind.or.sstn_beta_fixed>1._rkind) &
+    call parallel_abort('ice_init: sstn_beta_fixed must be between 0 and 1')
+  if(idealized_aice<0._rkind.or.idealized_aice>1._rkind) &
+    call parallel_abort('ice_init: idealized_aice must be between 0 and 1')
+  if(idealized_hice<=0._rkind) &
+    call parallel_abort('ice_init: idealized_hice must be positive')
+  if(idealized_case>0.and.nstep_ice/=1) &
+    call parallel_abort('ice_init: idealized cases currently require nstep_ice=1')
+  if(trim(idealized_floe_size)/='small'.and.trim(idealized_floe_size)/='medium'.and. &
+    trim(idealized_floe_size)/='large') &
+    call parallel_abort('ice_init: idealized_floe_size must be small, medium, or large')
+end subroutine read_idealized_ice_config

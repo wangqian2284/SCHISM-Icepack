@@ -92,7 +92,7 @@
 #ifdef USE_MICE
       use gen_modules_clock
       use mice_module, only: ntr_ice,u_ice,v_ice,ice_tr,delta_ice,sigma11, &
-   &sigma12,sigma22
+   &sigma12,sigma22,idealized_case
       use mice_therm_mod, only: t_oi
       use icedrv_main, only:io_icepack,restart_icepack
       use icepack_intfc,    only: icepack_sea_freezing_temperature
@@ -5174,7 +5174,17 @@
 
 #ifdef USE_MICE
       if(lhas_quad) call parallel_abort('init: no quads for mice')
-      if(.not.lreadll) call parallel_abort('init: mice needs hgrid.ll')
+      call read_idealized_ice_config
+      if(.not.lreadll) then
+        if(idealized_case==0) call parallel_abort('init: mice needs hgrid.ll')
+        ! Cartesian idealized columns use the configured reference location.
+        ! slam0/sfea0 have already been converted from degrees to radians.
+        xlon(:)=slam0
+        ylat(:)=sfea0
+        if(myrank==0) write(16,*) &
+          'Idealized MICE: no hgrid.ll; using reference lon/lat (degrees):', &
+          slam0*180.d0/pi,sfea0*180.d0/pi
+      endif
       !Read in modified (rotated north pole) lon/lat for ice model
 !      if(myrank==0) then
 !        open(32,file=in_dir(1:len_in_dir)//'hgrid2.ll',status='old')

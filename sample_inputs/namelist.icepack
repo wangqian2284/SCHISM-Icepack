@@ -1,6 +1,8 @@
 &idealized_nml
     ! Cases 1 and 2 require nfsdcat=16 and tr_fsd=.true. below.
     idealized_case       = 0        ! 0: realistic, 1: melt, 2: freeze
+    ! Idealized MICE can omit hgrid.ll; absent lon/lat use param.nml slam0/sfea0.
+    ! Other enabled modules/forcing options may still require hgrid.ll.
     idealized_floe_size  = 'medium' ! small: 500 m, medium: 1.5 km, large: 3 km radius
     idealized_aice       = 0.5
     idealized_hice       = 1.0

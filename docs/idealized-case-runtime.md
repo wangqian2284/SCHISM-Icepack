@@ -4,6 +4,16 @@ For the prescribed melt/freeze experiments, set `idealized_case=1/2` in
 `namelist.icepack`. The configuration is read before initialization uses that
 flag. `idealized_case=0` retains the realistic-case forcing requirements.
 
+Idealized initial ice uses zero salinity for both the enthalpy calculation and
+the ice salinity tracers, matching the original freshwater melt experiment.
+With `ktherm=2`, ice at 0 C then has enthalpy `-rhoi*Lfresh`, retaining its
+latent heat requirement. Using the default nonzero ice salinity at 0 C instead
+initializes fully liquid mush even when the assigned thickness is 1 m.
+Realistic initialization keeps its original salinity profile. Ocean salinity
+is not changed by this initialization fix. No new input parameter is required;
+rebuild and start from `ihot_mice=0` to regenerate the initial state. Existing
+restart states are not repaired by this change.
+
 The standalone prescribed-forcing setup can use `nws=0`, `ihconsv=0`, and
 `isconsv=0` in `param.nml`. In idealized mode, the ocean still applies the heat,
 shortwave and freshwater-derived salinity fluxes returned by Icepack. These

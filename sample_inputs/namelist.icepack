@@ -8,6 +8,8 @@
     idealized_floe_size  = 'medium' ! small: 500 m, medium: 1.5 km, large: 3 km radius
     idealized_aice       = 0.5
     idealized_hice       = 1.0
+    ! Idealized initial ice is fresh (zero ice salinity); use ktherm=2.
+    ! Initial enthalpy and ice salinity tracers use the same freshwater profile.
     sstntest             = 2        ! 0: node average, 1: fixed beta, 2: dynamic beta(R_f)
     sstn_beta_fixed      = 1.0      ! used only when sstntest=1
 /

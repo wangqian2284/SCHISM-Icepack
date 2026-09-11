@@ -1041,7 +1041,8 @@
              ainit, hinit    ! initial area, thickness
     
           real (kind=dbl_kind), dimension(nilyr) :: &
-             qin             ! ice enthalpy (J/m3)
+             qin,         & ! ice enthalpy (J/m3)
+             sice_init      ! salinity used for both enthalpy and ice tracers
     
           real (kind=dbl_kind), dimension(nslyr) :: &
              qsn             ! snow enthalpy (J/m3)
@@ -1175,9 +1176,13 @@
                     aicen(i,n) = ainit(n)
                     vicen(i,n) = hinit(n) * ainit(n) ! m
                     vsnon(i,n) = c0
+                    sice_init(:) = salinz(i,1:nilyr)
+                    ! Prescribed experiments start with freshwater ice. At 0 C,
+                    ! saline mush would be liquid despite the assigned ice volume.
+                    if (idealized_case > 0) sice_init(:) = c0
                       call icepack_init_trcr(Tair     = T_air(i),    &
                                              Tf       = Tf(i),       &
-                                             Sprofile = salinz(i,:), &
+                                             Sprofile = sice_init(:), &
                                              Tprofile = Tmltz(i,:),  &
                                              Tsfc     = Tsfc,        &
                                              nilyr=nilyr, nslyr=nslyr, &
@@ -1188,7 +1193,7 @@
                      do k = 1, nilyr
                         trcrn(i,nt_qice+k-1,n) = qin(k)
                         !if(qin(k).ne.qin(k)) write(12,*) qin(k),T_air(i),Tf(i)
-                        trcrn(i,nt_sice+k-1,n) = salinz(i,k)
+                        trcrn(i,nt_sice+k-1,n) = sice_init(k)
                      enddo
                      ! snow enthalpy
                      do k = 1, nslyr

@@ -11,7 +11,9 @@
     ! Idealized initial ice is fresh (zero ice salinity); use ktherm=2.
     ! Initial enthalpy and ice salinity tracers use the same freshwater profile.
     sstntest             = 2        ! 0: node average, 1: fixed beta, 2: dynamic beta(R_f)
-    sstn_beta_fixed      = 1.0      ! used only when sstntest=1
+    sstn_beta_fixed      = 0.00462962963 ! sstntest=1: 100 s / 21600 s (6 hours)
+    ! Recalculate fixed beta if ice_dt=dt*nstep_ice changes; no automatic timescale conversion.
+    sstn_kappa_e         = 184.0    ! m2/s, dynamic mixing; shared by realistic and idealized cases
 /
 
 &env_nml                    ! In the original release these variables are defined in the icepack.settings

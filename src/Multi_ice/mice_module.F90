@@ -51,6 +51,7 @@ MODULE mice_module
   integer :: ice_tests,ice_advection,ice_therm_on,ievp,mevp_rheol_steps,niter_fct
   integer :: idealized_case, sstntest
   real(rkind) :: idealized_aice, idealized_hice, sstn_beta_fixed
+  real(rkind) :: sstn_kappa_e ! sub-grid SST horizontal diffusivity (m2/s)
   character(len=16) :: idealized_floe_size
 
 NAMELIST /ice_dyn/ whichEVP, Pstar, delta_min, evp_rheol_steps, Cd_oce_ice, &

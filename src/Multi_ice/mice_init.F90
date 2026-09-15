@@ -263,6 +263,7 @@ subroutine ice_init
   end if
   if(myrank==0) then
     write(16,*) 'Sub-grid SST scheme=',sstntest,' fixed beta=',sstn_beta_fixed
+    write(16,*) 'Sub-grid SST kappa_e (m2/s)=',sstn_kappa_e
     if(idealized_case>0) then
       write(16,*) 'Idealized ice experiment: case=',idealized_case, &
         ' floe=',trim(idealized_floe_size)
@@ -300,11 +301,12 @@ subroutine read_idealized_ice_config
   use schism_glbl, only: rkind, nstep_ice
   use schism_msgp, only: parallel_abort
   use mice_module, only: idealized_case, idealized_floe_size, &
-    idealized_aice, idealized_hice, sstntest, sstn_beta_fixed
+    idealized_aice, idealized_hice, sstntest, sstn_beta_fixed, sstn_kappa_e
+  use, intrinsic :: ieee_arithmetic, only: ieee_is_finite
   implicit none
   integer :: config_unit, config_status
     namelist /idealized_nml/ idealized_case, idealized_floe_size, &
-   &idealized_aice, idealized_hice, sstntest, sstn_beta_fixed
+   &idealized_aice, idealized_hice, sstntest, sstn_beta_fixed, sstn_kappa_e
 
     idealized_case=0
     idealized_floe_size='medium'
@@ -312,6 +314,7 @@ subroutine read_idealized_ice_config
     idealized_hice=1.0_rkind
     sstntest=2
     sstn_beta_fixed=1.0_rkind
+    sstn_kappa_e=184.0_rkind
 
   open(newunit=config_unit, file='namelist.icepack', status='old', &
        action='read', iostat=config_status)
@@ -325,6 +328,8 @@ subroutine read_idealized_ice_config
     call parallel_abort('ice_init: sstntest must be 0, 1, or 2')
   if(sstn_beta_fixed<0._rkind.or.sstn_beta_fixed>1._rkind) &
     call parallel_abort('ice_init: sstn_beta_fixed must be between 0 and 1')
+  if(.not.ieee_is_finite(sstn_kappa_e).or.sstn_kappa_e<0._rkind) &
+    call parallel_abort('ice_init: sstn_kappa_e must be finite and nonnegative (m2/s)')
   if(idealized_aice<0._rkind.or.idealized_aice>1._rkind) &
     call parallel_abort('ice_init: idealized_aice must be between 0 and 1')
   if(idealized_hice<=0._rkind) &

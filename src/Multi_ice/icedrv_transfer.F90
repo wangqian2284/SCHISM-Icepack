@@ -88,7 +88,7 @@
           sstnfsd_rad = 0.d0
           nfloe = 0.d0
           floenum = 0.d0
-          kappae = 54.d0
+          kappae = sstn_kappa_e
           ! Ice 
           do i=1,npa
                beta = c0

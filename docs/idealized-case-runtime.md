@@ -4,6 +4,18 @@ For the prescribed melt/freeze experiments, set `idealized_case=1/2` in
 `namelist.icepack`. The configuration is read before initialization uses that
 flag. `idealized_case=0` retains the realistic-case forcing requirements.
 
+The `idealized_nml` group also configures sub-grid SST mixing for both realistic
+and idealized cases. `sstn_kappa_e` is the dynamic mixing diffusivity in m2/s
+(default 184; finite and nonnegative). Dynamic beta uses
+`ice_dt*(relative_speed/mean_radius + sstn_kappa_e/mean_radius**2)` and is
+clipped to [0,1] before mixing. Fixed mixing still uses `sstn_beta_fixed`
+directly, with no timescale parameter. For a 100 s ice step and a 6 hour
+relaxation timescale, set it to `0.00462962963`; recalculate it as
+`ice_dt/21600` when the ice step changes. The sample includes this value;
+the legacy default of 1.0 when fixed beta is omitted is unchanged.
+Existing files that omit `sstn_kappa_e` now use 184 instead of the old
+hard-coded 54. Set `sstn_kappa_e=54` explicitly to reproduce that diffusivity.
+
 Idealized initial ice uses zero salinity for both the enthalpy calculation and
 the ice salinity tracers, matching the original freshwater melt experiment.
 With `ktherm=2`, ice at 0 C then has enthalpy `-rhoi*Lfresh`, retaining its

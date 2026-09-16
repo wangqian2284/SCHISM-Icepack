@@ -148,15 +148,15 @@ module mice_therm_mod
   implicit none
   real(rkind), parameter  :: rhoair=  1.3            ! Air density,  LY2004 !1.3 AOMIP
 REAL(rkind), parameter  :: inv_rhoair=  1./1.3     ! Air density,  LY2004 !1.3 AOMIP
-REAL(rkind), parameter  :: rhowat= 1025.            ! Water density
-REAL(rkind), parameter  :: inv_rhowat= 1./1025.     ! Inverse Water density
+REAL(rkind) :: rhowat=1025._rkind             ! Water density; set for idealized cases in set_icepack
+REAL(rkind) :: inv_rhowat=1._rkind/1025._rkind ! Inverse water density
 REAL(rkind), parameter  :: rhoice=  910.            ! Ice density, AOMIP
 REAL(rkind), parameter  :: inv_rhoice=  1./910.     ! Ice density, AOMIP
 REAL(rkind), parameter  :: rhosno=  290.            ! Snow density, AOMIP
 REAL(rkind), parameter  :: inv_rhosno=  1./290.     ! Snow density, AOMIP
 
 REAL(rkind), parameter  :: cpair=1005.       ! Specific heat of air [J/(kg * K)] 
-REAL(rkind), parameter  :: cc=rhowat*4190.0  ! Volumetr. heat cap. of water [J/m**3/K](cc = rhowat*cp_water)
+REAL(rkind) :: cc=1025._rkind*4190._rkind ! Volumetric heat capacity; updated with rhowat
 REAL(rkind), parameter  :: cl=rhoice*3.34e5  ! Volumetr. latent heat of ice fusion [J/m**3](cl=rhoice*Lf) 
 REAL(rkind), parameter  :: clhw=2.501e6      ! Specific latent heat [J/kg]: water	-> water vapor
 REAL(rkind), parameter  :: clhi=2.835e6      !                              sea ice-> water vapor

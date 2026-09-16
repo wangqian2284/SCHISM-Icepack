@@ -4,6 +4,14 @@ For the prescribed melt/freeze experiments, set `idealized_case=1/2` in
 `namelist.icepack`. The configuration is read before initialization uses that
 flag. `idealized_case=0` retains the realistic-case forcing requirements.
 
+Cases 1 and 2 initialize both Icepack `rhow` and MICE `rhowat` to 1000 kg/m3.
+Icepack derived constants (including `cprho`) and MICE `inv_rhowat`/`cc` are
+updated with these densities before thermodynamic initialization. Realistic
+cases retain the original densities (1026 and 1025 kg/m3 respectively).
+This does not change initial ice concentration/thickness, ocean salinity,
+SCHISM `rho0`/`shw`, or Icepack `cp_ocn`; configure the ocean inputs for a
+freshwater experiment separately. Rebuild to apply this source change.
+
 The `idealized_nml` group also configures sub-grid SST mixing for both realistic
 and idealized cases. `sstn_kappa_e` is the dynamic mixing diffusivity in m2/s
 (default 184; finite and nonnegative). Dynamic beta uses

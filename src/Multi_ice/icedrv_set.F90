@@ -30,11 +30,11 @@
           !                               mpi_comm_fesom
           use schism_msgp, only : myrank
           !use i_param,             only: whichEVP
-          use mice_module,             only: ievp
+          use mice_module,             only: ievp, idealized_case
           !use i_param,             only: cd_oce_ice  
           use mice_module,             only: cd_oce_ice   
           !use i_therm_param,       only: albw
-          use mice_therm_mod,       only: albw
+          use mice_therm_mod,       only: albw, rhowat, inv_rhowat, cc
 
           implicit none
 
@@ -330,6 +330,16 @@
           !-----------------------------------------------------------------
           ! query Icepack default values
           !-----------------------------------------------------------------
+
+          ! Set freshwater densities before thermodynamics and derived constants
+          ! are initialized. The Icepack setter also recomputes cprho and Cp.
+          rhowat = 1025._dbl_kind
+          if (idealized_case == 1 .or. idealized_case == 2) then
+             rhowat = 1000._dbl_kind
+             call icepack_init_parameters(rhow_in=1000._dbl_kind)
+          endif
+          inv_rhowat = 1._dbl_kind / rhowat
+          cc = rhowat * 4190._dbl_kind
 
            call icepack_query_parameters(ustar_min_out=ustar_min, Cf_out=Cf,     &
                 albicev_out=albicev, albicei_out=albicei,                        &
@@ -1093,7 +1103,6 @@
 !=======================================================================
 
       end submodule icedrv_set
-
 
 
 

@@ -1,6 +1,7 @@
 &idealized_nml
     ! Cases 1 and 2 require nfsdcat=16 and tr_fsd=.true. below.
     idealized_case       = 0        ! 0: realistic, 1: melt, 2: freeze
+    ! Cases 1/2 use freshwater density: rhow=rhowat=1000 kg/m3.
     ! Idealized MICE can omit hgrid.ll; absent lon/lat use param.nml slam0/sfea0.
     ! Other enabled modules/forcing options may still require hgrid.ll.
     ! Prescribed cases support nws=0, ihconsv=0, isconsv=0; ocean exchange stays active.

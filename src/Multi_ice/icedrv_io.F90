@@ -307,6 +307,13 @@
                     call writeout_nc(id_out_var(noutput+198+k), trim(longname),1,1,npa, trcr(:,nt_qsno+k-1))
                     !call def_stream2D(nod2D,  nx_nh, trim(trname), trim(longname), trim(units), trcr(:,nt_qsno+k-1), io_list_icepack(i)%freq, io_list_icepack(i)%unit, io_list_icepack(i)%precision, mesh)
                  end do
+             case ('meltt     ')
+                  ! Actual surface thickness melted per category ice area (m/step).
+                  do k = 1,ncat
+                     write(longname,'(A,I0)') 'sea_ice_surface_melt_step_cat_', k
+                     call writeout_nc(id_out_var(ice_output_base+300+2*ncat+k), &
+                          trim(longname),1,1,npa,dble(melttn(:,k)))
+                  enddo
              case ('meltb     ')
                   ! Actual bottom thickness melted in each category (m/ice_dt).
                   ! Each value is per category ice area, not per grid area.
@@ -335,7 +342,7 @@
                  if (myrank==0) write(*,*) 'stream ', io_list_icepack(i)%id, ' is not defined !'
              end select
           end do
-          noutput=noutput+300+2*ncat
+          noutput=noutput+300+3*ncat
       end subroutine io_icepack
 
     !

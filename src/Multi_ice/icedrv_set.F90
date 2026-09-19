@@ -334,7 +334,7 @@
           ! Set freshwater densities before thermodynamics and derived constants
           ! are initialized. The Icepack setter also recomputes cprho and Cp.
           rhowat = 1025._dbl_kind
-          if (idealized_case == 1 .or. idealized_case == 2) then
+          if (idealized_case > 0) then
              rhowat = 1000._dbl_kind
              call icepack_init_parameters(rhow_in=1000._dbl_kind)
           endif

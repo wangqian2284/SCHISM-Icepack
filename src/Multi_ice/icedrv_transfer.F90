@@ -489,7 +489,7 @@
 
                !if(idry(i)==1) hmix(i) = 0
 
-               if (idealized_case == 1) then
+               if (idealized_case == 1 .or. idealized_case == 3) then
                   ! Shortwave-only melt experiment, initially balanced at 0 C.
                   pr(i) = 101325._dbl_kind
                   windx(i) = c0

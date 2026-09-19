@@ -63,3 +63,14 @@ block with signaling-NaN inputs and floating-point traps for melt and freeze;
 compiled and executed heat/salt gates with and without `USE_MICE`; checked that
 the realistic-mode guard remains active, configuration precedes use, and optical
 defaults follow allocation. Full MPI model execution has not been verified.
+
+## Thin-ice sensitivity experiment
+
+Set `idealized_case=3` and `sstntest=2` for the dynamic-scheme sensitivity
+experiment. Case 3 uses exactly the prescribed forcing of melt case 1 and
+freshwater densities/salinity initialization, but overrides `idealized_hice`
+with 0.2 m after reading the namelist. Keep all other baseline inputs unchanged
+(including concentration, floe size, diffusivity, ocean state and time step).
+Start with `ihot_mice=0` so a restart does not overwrite the initial ice.
+The initial thickness category is selected from 0.2 m automatically.
+Enable `'meltt'` in `nml_list_icepack` to output surface melt by category.

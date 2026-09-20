@@ -322,8 +322,8 @@ subroutine read_idealized_ice_config
   read(config_unit, nml=idealized_nml, iostat=config_status)
   close(config_unit)
   if(config_status>0) call parallel_abort('ice_init: malformed idealized_nml')
-  if(idealized_case<0.or.idealized_case>3) &
-    call parallel_abort('ice_init: idealized_case must be 0, 1, 2, or 3')
+  if(idealized_case<0.or.idealized_case>2) &
+    call parallel_abort('ice_init: idealized_case must be 0, 1, or 2')
   if(sstntest<0.or.sstntest>2) &
     call parallel_abort('ice_init: sstntest must be 0, 1, or 2')
   if(sstn_beta_fixed<0._rkind.or.sstn_beta_fixed>1._rkind) &
@@ -332,8 +332,6 @@ subroutine read_idealized_ice_config
     call parallel_abort('ice_init: sstn_kappa_e must be finite and nonnegative (m2/s)')
   if(idealized_aice<0._rkind.or.idealized_aice>1._rkind) &
     call parallel_abort('ice_init: idealized_aice must be between 0 and 1')
-  ! Thin-ice sensitivity case: same forcing as case 1, fixed initial thickness.
-  if(idealized_case==3) idealized_hice=0.2_rkind
   if(idealized_hice<=0._rkind) &
     call parallel_abort('ice_init: idealized_hice must be positive')
   if(idealized_case>0.and.nstep_ice/=1) &

@@ -66,11 +66,11 @@ defaults follow allocation. Full MPI model execution has not been verified.
 
 ## Thin-ice sensitivity experiment
 
-Set `idealized_case=3` and `sstntest=2` for the dynamic-scheme sensitivity
-experiment. Case 3 uses exactly the prescribed forcing of melt case 1 and
-freshwater densities/salinity initialization, but overrides `idealized_hice`
-with 0.2 m after reading the namelist. Keep all other baseline inputs unchanged
-(including concentration, floe size, diffusivity, ocean state and time step).
+Set `idealized_case=1`, `idealized_hice=0.2` and `sstntest=2` for the
+thin-ice dynamic-scheme sensitivity experiment. Keep all other baseline melt
+inputs unchanged (including concentration, floe size, diffusivity, ocean state
+and time step). Use `idealized_hice=1.0` for the original baseline. No separate
+case number is needed; case 3 is not supported.
 Start with `ihot_mice=0` so a restart does not overwrite the initial ice.
 The initial thickness category is selected from 0.2 m automatically.
 Enable `'meltt'` in `nml_list_icepack` to output surface melt by category.

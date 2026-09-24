@@ -49,6 +49,7 @@ MODULE mice_module
   real(rkind) :: ice_cutoff,theta_io,cos_io,sin_io,mevp_alpha1,mevp_alpha2, &
   &h_ml0,salt_ice,salt_water
   integer :: ice_tests,ice_advection,ice_therm_on,ievp,mevp_rheol_steps,niter_fct
+  logical :: subgrid_freezing = .false. ! opt in to experimental local new-ice formation
   integer :: idealized_case, sstntest
   real(rkind) :: idealized_aice, idealized_hice, sstn_beta_fixed
   real(rkind) :: sstn_kappa_e ! sub-grid SST horizontal diffusivity (m2/s)

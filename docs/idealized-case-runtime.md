@@ -74,3 +74,37 @@ case number is needed; case 3 is not supported.
 Start with `ihot_mice=0` so a restart does not overwrite the initial ice.
 The initial thickness category is selected from 0.2 m automatically.
 Enable `'meltt'` in `nml_list_icepack` to output surface melt by category.
+
+## Freezing versus sub-grid melting
+
+Set `subgrid_freezing` in `idealized_nml` (applies to realistic and idealized
+cases, independently of `sstntest`). The default `.false.` selects original
+`add_new_ice` using grid-mean `frzmlt`; FSD welding uses the same grid-mean
+potential. Positive freezing heat is returned through the existing `hocnn`
+coupling. `.true.` selects experimental `add_new_ice2` with local `frzmltn`
+and its own heat feedback; welding then uses open-water `frzmltn(1)`.
+
+With `.false.`, if grid SST or any occupied sub-region SST is below freezing,
+all sub-region SSTs are reset to grid SST before computing melt/freeze
+potentials. Empty ice categories and zero-area open water do not trigger this
+fallback. Thus warm-grid/cold-open-water and cold-grid/warm-open-water states
+both return to the grid-mean treatment; so do cold occupied ice categories.
+The ocean grid SST itself is not changed. This is a temporary complete-mixing
+fallback, not a completed sub-grid freezing or latent-heat redistribution model.
+It preserves sub-region mean heat only when the pre-reset area-weighted SST
+matches grid SST; pre-existing discrepancies are reset to the ocean state.
+`beta=-1` marks this fallback rather than an actual mixing coefficient.
+
+With `.true.`, the experimental behavior is retained: grid SST below freezing
+still resets all sub-region SSTs, but warm-grid/local-supercooling states can
+form local new ice while other categories melt. Keep this option off for the
+current experiments. Surface melting and conductive basal growth remain
+governed by their own energy balances; these are not disabled by the fallback.
+
+Fallback logging: `mirror.out` contains one rank-0 line for each ice step with
+at least one reset, e.g. `SST_FALLBACK step=100 wet_nodes=136 subgrid_freezing=F`.
+`wet_nodes` is the global number of owned wet nodes reset during that call;
+ghost nodes and initialization (`it_main<=0`) are excluded. These are per-step
+counts, not unique nodes or accumulated counts over an output interval. Both
+the grid-supercooling reset and the additional local-supercooling fallback are
+included. No line is emitted on steps with zero counted resets.

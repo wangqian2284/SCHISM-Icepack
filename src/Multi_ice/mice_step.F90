@@ -348,6 +348,7 @@ subroutine step_therm2 (dt)
 
     ! column package_includes
     use icepack_intfc, only: icepack_step_therm2
+    use mice_module, only: subgrid_freezing
     use schism_glbl, only : idry
     implicit none
 
@@ -385,7 +386,8 @@ subroutine step_therm2 (dt)
        if (tr_fsd) &
        wave_sig_ht(i) = c4*SQRT(SUM(wave_spectrum(i,:)*dwavefreq(:)))
 
-       call icepack_step_therm2(dt=dt, ncat=ncat,                &
+       call icepack_step_therm2(subgrid_freezing=subgrid_freezing, &
+                    dt=dt, ncat=ncat,                &
                     nltrcr=nltrcr, nilyr=nilyr, nslyr=nslyr,     &
                     hin_max=hin_max(:), nblyr=nblyr,             &   
                     aicen=aicen(i,:),                            &

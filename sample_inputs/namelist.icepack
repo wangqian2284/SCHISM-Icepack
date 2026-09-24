@@ -11,6 +11,8 @@
     idealized_hice       = 1.0      ! m; set to 0.2 for the thin-ice melt experiment
     ! Idealized initial ice is fresh (zero ice salinity); use ktherm=2.
     ! Initial enthalpy and ice salinity tracers use the same freshwater profile.
+    ! With .false., any occupied supercooled region triggers a reset to grid SST.
+    subgrid_freezing     = .false. ! original new ice; .true. selects experimental add_new_ice2
     sstntest             = 2        ! 0: node average, 1: fixed beta, 2: dynamic beta(R_f)
     sstn_beta_fixed      = 0.00462962963 ! sstntest=1: 100 s / 21600 s (6 hours)
     ! Recalculate fixed beta if ice_dt=dt*nstep_ice changes; no automatic timescale conversion.

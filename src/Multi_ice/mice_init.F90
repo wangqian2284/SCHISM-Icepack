@@ -264,6 +264,7 @@ subroutine ice_init
   if(myrank==0) then
     write(16,*) 'Sub-grid SST scheme=',sstntest,' fixed beta=',sstn_beta_fixed
     write(16,*) 'Sub-grid SST kappa_e (m2/s)=',sstn_kappa_e
+    write(16,*) 'Experimental sub-grid freezing=',subgrid_freezing
     if(idealized_case>0) then
       write(16,*) 'Idealized ice experiment: case=',idealized_case, &
         ' floe=',trim(idealized_floe_size)
@@ -301,12 +302,12 @@ subroutine read_idealized_ice_config
   use schism_glbl, only: rkind, nstep_ice
   use schism_msgp, only: parallel_abort
   use mice_module, only: idealized_case, idealized_floe_size, &
-    idealized_aice, idealized_hice, sstntest, sstn_beta_fixed, sstn_kappa_e
+    idealized_aice, idealized_hice, sstntest, sstn_beta_fixed, sstn_kappa_e, subgrid_freezing
   use, intrinsic :: ieee_arithmetic, only: ieee_is_finite
   implicit none
   integer :: config_unit, config_status
     namelist /idealized_nml/ idealized_case, idealized_floe_size, &
-   &idealized_aice, idealized_hice, sstntest, sstn_beta_fixed, sstn_kappa_e
+   &idealized_aice, idealized_hice, sstntest, sstn_beta_fixed, sstn_kappa_e, subgrid_freezing
 
     idealized_case=0
     idealized_floe_size='medium'
@@ -315,6 +316,7 @@ subroutine read_idealized_ice_config
     sstntest=2
     sstn_beta_fixed=1.0_rkind
     sstn_kappa_e=184.0_rkind
+    subgrid_freezing=.false.
 
   open(newunit=config_unit, file='namelist.icepack', status='old', &
        action='read', iostat=config_status)

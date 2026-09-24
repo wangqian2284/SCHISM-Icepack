@@ -11,11 +11,11 @@
       contains
 
       module subroutine schism_to_icepack
-          use schism_glbl,only: rkind,npa,tr_nd,iplg,pr,fluxprc,rho0,shw,windx,windy,wave_spec, &
+          use schism_glbl,only: rkind,np,npa,tr_nd,iplg,pr,fluxprc,rho0,shw,windx,windy,wave_spec, &
           &nvrt,srad_o,albedo,hradd,airt1,shum1,errmsg,fresh_wa_flux,net_heat_flux, &
           uu2,vv2,area,elnode,i34,dt,nstep_ice,prec_rain,prec_snow,it_main,lhas_ice,drampwind,tau, &
           nws,idry,isbnd,dp,nnp,znl,eta2,kbp,prho,xlon,ylat
-          use schism_msgp, only: myrank,nproc,parallel_abort,parallel_finalize,exchange_p2d
+          use schism_msgp, only: myrank,nproc,parallel_abort,parallel_finalize,exchange_p2d,comm
           use mice_module
           use mice_therm_mod
           
@@ -75,6 +75,8 @@
           real(rkind) :: ug,ustar,T_oc,S_oc,fw,ehf,dux,dvy,rampwind,dptot,hmixt,puny,rr,d_1,d_2,&
           dp1,dp2,srad1,srad2,srad3,srad4,sstthreshold,beta,floeshape,kappae
           !type(t_mesh), target, intent(in) :: mesh
+         integer :: fallback_local, fallback_global, fallback_ierr
+         logical :: reset_subgrid_sst
          real(rkind), allocatable :: depth0(:)
 
          allocate(depth0(nvrt))
@@ -83,6 +85,7 @@
          call icepack_query_parameters(calc_strair_out=calc_strair, cprho_out=cprho,puny_out=puny,floeshape_out=floeshape)
          call icepack_warnings_flush(ice_stderr)
          
+          fallback_local = 0
           sstthreshold=5
           sstnbeta = 0.d0
           sstnfsd_rad = 0.d0
@@ -389,14 +392,27 @@
                
                Tf(i)   = icepack_sea_freezing_temperature(sss(i))
 
-               if(sst(i)<Tf(i)) then
+               ! Until sub-grid freezing is enabled, use the ocean grid SST
+               ! whenever any occupied region would be supercooled. This also
+               ! covers warm grid SST with cold open water or a cold ice category.
+               reset_subgrid_sst = sst(i) < Tf(i)
+               if (.not. subgrid_freezing) then
+                  if (aice0(i) > puny .and. sstn(i,1) < Tf(i)) reset_subgrid_sst = .true.
+                  do j=1,ncat
+                     if (aicen(i,j) > puny .and. sstn(i,j+1) < Tf(i)) reset_subgrid_sst = .true.
+                  enddo
+               endif
+               if(reset_subgrid_sst) then
+                  ! Count owned wet nodes only; exclude initialization and ghosts.
+                  if (i <= np .and. idry(i) == 0 .and. it_main > 0) &
+                     fallback_local = fallback_local + 1
                   do j=1,ncat+1
                      sstn(i,j) = sst(i)
                   enddo
                   beta = -1
                endif
                               
-               !redistribute the SSTN, stay synchronized with SST, when SST < Tf, there is no melting, vice versa
+               ! beta=-1 marks a grid-SST reset, not a negative mixing coefficient.
 
                ! if(sst(i)>Tf(i)) then ! melt
                !    tmp2 = 0
@@ -690,6 +706,15 @@
              daycal     = daycal365
           end if
           days_per_year = daycal(13)
+          ! One global summary per triggered ice step, written by rank 0 only.
+          call MPI_ALLREDUCE(fallback_local, fallback_global, 1, MPI_INTEGER, &
+                             MPI_SUM, comm, fallback_ierr)
+          if (fallback_ierr /= MPI_SUCCESS) call parallel_abort('SST fallback diagnostic reduction failed')
+          if (myrank == 0 .and. fallback_global > 0) then
+             write(16,'(A,I0,A,I0,A,L1)') 'SST_FALLBACK step=',it_main, &
+                ' wet_nodes=',fallback_global,' subgrid_freezing=',subgrid_freezing
+          endif
+
           istep1        = it_main
           time          = it_main*dt
           mday          = day_in_month

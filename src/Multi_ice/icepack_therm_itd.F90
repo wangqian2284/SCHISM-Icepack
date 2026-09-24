@@ -2792,7 +2792,10 @@
                                      dwavefreq,                   &
                                      d_afsd_latg,  d_afsd_newi,   &
                                      d_afsd_latm,  d_afsd_weld,   &
-                                     floe_rad_c,   floe_binwidth, meltln)
+                                     floe_rad_c,   floe_binwidth, meltln, &
+                                     subgrid_freezing)
+
+      logical (kind=log_kind), intent(in), optional :: subgrid_freezing
 
       ! Actual category contribution to lateral ice volume loss (m/grid area).
       real (kind=dbl_kind), dimension(:), intent(out), optional :: meltln
@@ -2922,13 +2925,19 @@
 
       logical (kind=log_kind), save :: &
          first_call = .true.   ! first call flag
-      real (kind=dbl_kind) :: &
-         ssttest,k
+      integer (kind=int_kind) :: k
+      logical (kind=log_kind) :: use_subgrid_freezing
+      real (kind=dbl_kind) :: frzmlt_weld
       character(len=*),parameter :: subname='(icepack_step_therm2)'
 
       !-----------------------------------------------------------------
       ! Check optional arguments and set local values
       !-----------------------------------------------------------------
+
+       use_subgrid_freezing = .false.
+       if (present(subgrid_freezing)) use_subgrid_freezing = subgrid_freezing
+       frzmlt_weld = frzmlt
+       if (use_subgrid_freezing) frzmlt_weld = frzmltn(1)
 
        if (present(meltln)) meltln(:) = c0
 
@@ -3018,9 +3027,8 @@
       ! Add frazil ice growing in leads.
       !-----------------------------------------------------------------
 
-      ssttest=1
-      ! identify ice-ocean cells
-      if (ssttest==0) then
+      ! Default: original grid-mean new ice. Opt-in: experimental local freezing.
+      if (.not. use_subgrid_freezing) then
          call add_new_ice (ncat,          nilyr,        &
                            nfsd,          nblyr,        &
                            n_aero,        dt,           &
@@ -3051,8 +3059,7 @@
             hocnn(k) = hocnn(k) + max(c0,frzmlt)
          enddo
          if (icepack_warnings_aborted(subname)) return
-
-         else 
+      else
          call add_new_ice2 (ncat,          nilyr,        &
                            nfsd,          nblyr,        &
                            n_aero,        dt,           &
@@ -3080,9 +3087,10 @@
                            wavefreq,      dwavefreq,    &
                            d_afsd_latg,   d_afsd_newi,  &
                            floe_rad_c, floe_binwidth)
-
          if (icepack_warnings_aborted(subname)) return
-         endif
+      endif
+
+
       !-----------------------------------------------------------------
       ! Melt ice laterally.
       !-----------------------------------------------------------------
@@ -3107,8 +3115,7 @@
       ! Floe welding during freezing conditions
       if (tr_fsd) then
          call fsd_weld_thermo (ncat,  nfsd,   &
-                               !dt,    frzmlt, &
-                               dt,frzmltn(1), &
+                               dt,    frzmlt_weld, &
                                aicen, trcrn,  &
                                d_afsd_weld)
          if (icepack_warnings_aborted(subname)) return

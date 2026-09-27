@@ -42,10 +42,8 @@
       real (kind=dbl_kind), parameter  :: &
          swh_minval = 0.01_dbl_kind,  & ! minimum value of wave height (m)
          straincrit = 3.e-5_dbl_kind, & ! critical strain
-         !D          = 1.e4_dbl_kind,  & ! domain size
-         D          = 2.e2_dbl_kind,  & ! domain size
+         D          = 2.e4_dbl_kind,  & ! nominal domain size (m); sampling uses nx and dx
          dx         = 2._dbl_kind,   & ! domain spacing
-        !dx         = c1,             & ! domain spacing
          threshold  = c10               ! peak-finding threshold -
                                         ! points are defined to be extrema if they
                                         ! are a local max or min over a distance
@@ -55,8 +53,7 @@
                                         ! floe size affected by wave fracture
 
       integer (kind=int_kind), parameter :: &
-         nx = 100         ! number of points in domain
-      !   nx = 10000         ! number of points in domain
+         nx = 10000         ! number of points; X = 2, 4, ..., 20000 m
 
       integer (kind=int_kind), parameter :: &
          max_no_iter = 100 ! max no of iterations to compute wave fracture
@@ -727,5 +724,4 @@
       end module icepack_wavefracspec
 
 !=======================================================================
-
 

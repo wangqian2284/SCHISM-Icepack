@@ -56,7 +56,7 @@
     tr_pond_topo = .false.
     tr_pond_lvl  = .false.
     tr_aero      = .false.
-    tr_fsd       = .false.  ! set to .true. for idealized cases
+    tr_fsd       = .true.   ! required for wave fracture and idealized cases
 /
 
 &thermo_nml
@@ -130,7 +130,7 @@
     l_mpond_fresh   = .false.
     tfrz_option     = 'mushy'
     oceanmixed_ice  = .true.
-    wave_spec_type  = 'none'
+    wave_spec_type  = 'constant' ! fixed phases, one wave realization per call
     dragio          = 0.00536
 /
 

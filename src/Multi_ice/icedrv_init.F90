@@ -1930,7 +1930,7 @@
         implicit none
 
         ! include 'mpif.h'
-        integer (kind=int_kind)   :: i, j, k, iblk,n,it, &     ! counting indices
+        integer (kind=int_kind)   :: i, j, k, iblk,n,it,icat, & ! counting indices
                                      nt_Tsfc, nt_sice, nt_qice, nt_qsno,    &
                                      nt_apnd, nt_hpnd, nt_ipnd, nt_alvl,    &
                                      nt_vlvl, nt_iage, nt_FY,   nt_aero,    &
@@ -2087,11 +2087,16 @@
 
             if (aicetmp(i) > 0 .and. vicetmp(i) > 0) then
                hicetmp(i) = vicetmp(i) / aicetmp(i)
-               do n = 1 ,ncat 
-                  if(hicetmp(i)<hin_max(n)) exit
+               ! The thickest category accepts ice above the last internal boundary.
+               icat = ncat
+               do n = 1, ncat - 1
+                  if (hicetmp(i) < hin_max(n)) then
+                     icat = n
+                     exit
+                  endif
                enddo
-               ainit(n) = aicetmp(i)
-               hinit(n) = hicetmp(i)
+               ainit(icat) = aicetmp(i)
+               hinit(icat) = hicetmp(i)
             endif
 
             do n = 1, ncat
